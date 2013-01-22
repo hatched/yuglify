@@ -39,9 +39,14 @@ if (parsed.help || (!parsed.argv.remain.length && !parsed.terminal)) {
     var help = [
         'yuglify@' + pack.version,
         '',
-        '           yuglify ./foo.js #Auto saves to ./foo-min.js',
-        '           yuglify ./foo/foo.js ./bar/bar.js #Auto saves to ./foo/foo-min.js and ./bar/bar-min.js',
-        '           yuglify ./foo/foo.css ./bar/bar.js #Auto saves to ./foo/foo-min.css and ./bar/bar-min.js',
+        'Usage: yuglify [OPTION]... SOURCE',
+        '',
+        '       yuglify ./foo.js',
+        '           # Auto saves to ./foo-min.js',
+        '       yuglify ./foo/foo.js ./bar/bar.js',
+        '           # Auto saves to ./foo/foo-min.js and ./bar/bar-min.js',
+        '       yuglify ./foo/foo.css ./bar/bar.js',
+        '           # Auto saves to ./foo/foo-min.css and ./bar/bar-min.js',
         '',
         '   --help/-h       show this',
         '   --version/-v    show version',
@@ -94,6 +99,7 @@ if (parsed.terminal) {
 
             compfn(data, function(err, smashed) {
                 if (err) {
+                    console.log(err); //log out the true error instead of [object Object]
                     throw(err);
                     process.exit(1);
                 }
