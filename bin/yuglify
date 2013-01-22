@@ -11,6 +11,7 @@ var nopt = require('nopt'),
     exists = fs.existsSync || path.existsSync,
     pack = require('../package.json'),
     jsmin = require('../').jsmin,
+    jsminConfig = require('../').jsminConfig,
     cssmin = require('../').cssmin,
     known = {
         type: ['css', 'js'],
@@ -52,6 +53,9 @@ if (parsed.help || (!parsed.argv.remain.length && !parsed.terminal)) {
         '   --version/-v    show version',
         '   --type js|css   what type of file to compress (used with stdin)',
         '   --terminal      use stdin and stdout instead of files',
+        '   --source-map    generate source map for javascript file',
+        '   --source-flag   add the //@ sourceMappingURL flag to the end of the',
+        '                   generated file instead of relying on X-SourceMap header',
         '   --output <file> use this file when using --terminal',
         '   <files to compress>'
     ];
@@ -94,8 +98,20 @@ if (parsed.terminal) {
         if (exists(file)) {
             var data = fs.readFileSync(file, 'utf8'),
                 ext = path.extname(file),
-                out = path.join(path.dirname(file), path.basename(file).replace(ext, '') + '-min' + ext),
+                dirPath = path.dirname(file),
+                baseName = path.basename(file),
+                base = baseName.replace(ext, ''),
+                out =  base + '-min' + ext,
+                sourceMap = base + '-map' + ext,
                 compfn = (ext === '.css' ? cssmin : jsmin);
+
+            jsminConfig.map = parsed['source-map'];
+            jsminConfig.fileName = baseName;
+            jsminConfig.sourceMap = {
+                flag: parsed['source-flag'],
+                mapFile: sourceMap,
+                file: out
+            };
 
             compfn(data, function(err, smashed) {
                 if (err) {
@@ -103,7 +119,10 @@ if (parsed.terminal) {
                     throw(err);
                     process.exit(1);
                 }
-                fs.writeFileSync(out, smashed, 'utf8');
+                fs.writeFileSync(path.join(dirPath, out), smashed.min, 'utf8');
+                if (parsed['source-map']) {
+                    fs.writeFileSync(path.join(dirPath, sourceMap), smashed.map, 'utf8');
+                }
                 console.log('compressed file', out);
             });
         } else {
